@@ -2,7 +2,7 @@ FROM eeacms/elk-kibana:6.2.2
 
 MAINTAINER michimau <mauro.michielon@eea.europa.eu>
 
-RUN npm install bower
+RUN npm install -g bower
 RUN echo '{ "allow_root": true }' > /root/.bowerrc
 
 ENV KIBANA_VERSION 6.2.2
