@@ -27,3 +27,6 @@ RUN cd /kibana/plugins/kibana-enhanced-table && sed "s#KIBANA_VERSION#$KIBANA_VE
 
 ADD plugins/ob-kb-percent /kibana/plugins/ob-kb-percent
 RUN cd /kibana/plugins/ob-kb-percent && sed "s#KIBANA_VERSION#$KIBANA_VERSION#g" -i ./package.json && npm install
+
+ADD plugins/kibana-xlsx-import /kibana/plugins/kibana-xlsx-import
+RUN cd /kibana/plugins/kibana-xlsx-import && sed "s#KIBANA_VERSION#$KIBANA_VERSION#g" -i ./package.json && npm install
