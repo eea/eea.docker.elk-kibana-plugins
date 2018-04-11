@@ -30,3 +30,7 @@ RUN cd /opt/kibana/plugins/ob-kb-percent && sed "s#KIBANA_VERSION#$KIBANA_VERSIO
 
 ADD plugins/kibana-xlsx-import /opt/kibana/plugins/kibana-xlsx-import
 RUN cd /opt/kibana/plugins/kibana-xlsx-import && sed "s#KIBANA_VERSION#$KIBANA_VERSION#g" -i ./package.json && npm install
+
+ADD plugins/kibana-search-widget /opt/kibana/plugins/kibana-search-widget
+RUN cd /opt/kibana/plugins/kibana-search-widget && sed "s#KIBANA_VERSION#$KIBANA_VERSION#g" -i ./package.json && npm install
+
