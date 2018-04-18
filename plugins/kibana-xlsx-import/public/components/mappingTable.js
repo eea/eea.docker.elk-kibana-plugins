@@ -1,7 +1,8 @@
 import React from 'react';
 import {
   EuiBasicTable,
-  EuiSelect
+  EuiSelect,
+  EuiFieldText
 } from '@elastic/eui';
 
 const MappingTable = (props) => {
@@ -29,9 +30,14 @@ const MappingTable = (props) => {
   }, {
     field: 'type',
     name: 'Type',
-    truncateText: true,
     render: (name) => (
       <EuiSelect options={options} defaultValue={name}/>
+    )
+  }, {
+    field: 'advjson',
+    name: 'Advanced JSON',
+    render: () => (
+      <EuiFieldText className="advjsontext" placeholder='"fielddata": true, "format": "yyyy-MM-dd", ...' />
     )
   }];
 
