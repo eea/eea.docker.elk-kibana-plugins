@@ -1,4 +1,4 @@
-FROM eeacms/elk-kibana:6.2.3-inspire
+FROM eeacms/elk-kibana:6.2.3-1.1-inspire
 
 MAINTAINER michimau <mauro.michielon@eea.europa.eu>
 

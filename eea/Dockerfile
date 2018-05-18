@@ -1,4 +1,4 @@
-FROM eeacms/elk-kibana:6.2.3-eea
+FROM eeacms/elk-kibana:6.2.3-1.1-eea
 
 MAINTAINER michimau <mauro.michielon@eea.europa.eu>
 
