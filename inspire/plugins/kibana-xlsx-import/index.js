@@ -12,13 +12,7 @@ export default function (kibana) {
         title: 'XLSX Import',
         description: 'Import XLSX to JSON',
         main: 'plugins/xlsx-import/app',
-        injectVars: function (server, options) {
-          var config = server.config();
-          return {
-            kbnIndex: config.get('kibana.index'),
-            esApiVersion: config.get('elasticsearch.apiVersion'),
-          };
-        }
+        icon: 'plugins/xlsx-import/ressources/icon.svg',
       },
 
       uiSettingDefaults: {
@@ -26,19 +20,9 @@ export default function (kibana) {
           value: 1000,
           description: 'The number of json item send in one bulk request'
         },
-        'xlsx-import:displayed_elements': {
+        'xlsx-import:displayed_rows': {
           value: 5,
-          description: 'Number of elements displayed in the preview datatable'
-        },
-        'xlsx-import:filesize_warning': {
-          value: 10,
-          description: 'Trigger for warning file size popup (in Mb)'
-        },
-        'xlsx-import:default_language': {
-          value: "English",
-          description: "Which language should be used.  \"Browser\" will use the language detected by your browser.",
-          options: ["Browser", "English", "Français"],
-          type: "select"
+          description: 'Number of row displayed in the preview'
         }
       },
 

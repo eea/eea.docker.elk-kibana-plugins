@@ -1,75 +1,112 @@
-import moment from 'moment';
 import { uiModules } from 'ui/modules';
 import uiRoutes from 'ui/routes';
+import chrome from 'ui/chrome';
 import template from './templates/index.html';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {EuiToast} from '@elastic/eui';
-import Table from './components/stepOne.js';
+import {EuiImage} from '@elastic/eui';
+import Main from './components/main.js';
+import PreviewTable from './components/previewTable.js';
+import StepOne from './components/stepOne.js';
 import StepTwo from './components/stepTwo.js';
 import StepThree from './components/stepThree.js';
+import XLSX from 'xlsx';
 
 import 'ui/autoload/styles';
 import './less/main.less';
-import 'fixed-data-table-2/dist/fixed-data-table.css';
 
-import 'angular-spinner';
-import 'angular-translate';
-import 'angular-translate-loader-static-files';
-
-
+/*
 let jsonData;                                 // Contient les données de conversion du xlxs
 let fileInfo;                                 // Contient les informations sur le fichier upload (data, name, size)
-let workbook;
+let workbook;*/
 
-let maxFileSize;                              // Taille du fichier xlxs avant warning
 let bulkSize;                                 // Taille maximal des paquets du bulk
 let maxDisplayableElement;                    // Nombre d'element afficher dans la previs des données
-let default_language;
 
 const supportedFileType = ['xlsx', 'csv'];    // Defini les extensions utilisable dans le plugin
 
-var app = uiModules.get('app/xlsx_import', ['angularSpinner', 'pascalprecht.translate']);
+var app = uiModules.get('app/xlsx_import', []);
 
-uiRoutes.enable();
+/*uiRoutes.enable();
 uiRoutes
 .when('/', {
   template : template
+});*/
+
+app.config($locationProvider => {
+  $locationProvider.html5Mode({
+    enabled: false,
+    requireBase: false,
+    rewriteLinks: false,
+  });
 });
+app.config(stateManagementConfigProvider =>
+  stateManagementConfigProvider.disable()
+);
 
+function RootController($scope, $element, config) {
+  const domNode = $element[0];
+  bulkSize = config.get('xlsx-import:bulk_package_size');
+  maxDisplayableElement = config.get('xlsx-import:displayed_rows');
 
-app.config(['$translateProvider', function($translateProvider, config){
-  //angular-translate security
-  $translateProvider.useSanitizeValueStrategy('escape');
+  // render react to DOM
+  ReactDOM.render( <Main nextStep={displayStep2}/>, domNode);
 
-  //Path for loading translation files [prefix][filename][suffix]
-  $translateProvider.useStaticFilesLoader({
-    prefix: '../plugins/xlsx-import/i18n/',
-    suffix: '.json'
+  // unmount react on controller destroy
+  $scope.$on('$destroy', () => {
+    unmountComponentAtNode(domNode);
   });
 
-  // Tell the module what language to use by default
-  var userLang = navigator.language || navigator.userLanguage;
-  if(userLang === 'fr')
-    $translateProvider.preferredLanguage('fr');
-  else
-    $translateProvider.preferredLanguage('en');
 
-}])
+  function displayStep2(indexname, workbook, sheetname, firstrow) {
+    //document.getElementById("progress-img").innerHTML = '<img src="../plugins/xlsx-import/ressources/progress-step2.png"/>'
 
-app.config(['usSpinnerConfigProvider', function (usSpinnerConfigProvider) {
-  usSpinnerConfigProvider.setDefaults({color: 'black'});
-}])
+    ReactDOM.render(
+      <EuiImage alt="steps" url="../plugins/xlsx-import/ressources/progress-step2.png" />,
+      document.getElementById("step")
+    );
+
+    ReactDOM.render(
+      <StepTwo
+        indexName={indexname}
+        header={get_header_row(workbook.Sheets[sheetname])}
+        items={getHeaderWithType(workbook.Sheets[sheetname])}
+        firstRow = {firstrow}
+        nextStep={displayStep3}
+        workbook={workbook}
+        sheetname={sheetname}
+        bulksize={bulkSize}
+      />,
+      document.getElementById("main")
+    );
+  }
 
 
-app.controller('xlsxImport', function ($scope, $route, $interval, $http, $translate, $timeout, config) {
-  maxFileSize = config.get('xlsx-import:filesize_warning');
+  function displayStep3(indexName, sheetname , filename, nbDocument) {
+    //document.getElementById("progress-img").innerHTML = '<img src="../plugins/xlsx-import/ressources/progress-step3.png"/>'
+    ReactDOM.render(
+      <EuiImage alt="steps" url="../plugins/xlsx-import/ressources/progress-step3.png" />,
+      document.getElementById("step")
+    );
+
+    ReactDOM.render(
+      <StepThree
+        indexName={indexName}
+        sheetName={sheetname}
+        fileName={filename}
+        nbDocument={nbDocument} />,
+      document.getElementById("main")
+    );
+  }
+}
+
+chrome.setRootController("xlsx_import", RootController);
+
+/*app.controller('xlsxImport', function ($scope, $route, $interval, $http, $timeout, config) {
   bulkSize = config.get('xlsx-import:bulk_package_size');
-  maxDisplayableElement = config.get('xlsx-import:displayed_elements');
-  default_language = config.get('xlsx-import:default_language');
+  maxDisplayableElement = config.get('xlsx-import:displayed_rows');
 
   $scope.title = 'XLSX Import';
-  $scope.description = $translate.instant('PLUGIN_DESCRIPTION');
 
   $scope.topNavMenu = [
     {
@@ -80,41 +117,20 @@ app.controller('xlsxImport', function ($scope, $route, $interval, $http, $transl
   ];
 
   $scope.indexName = '';
-  //$scope.esID = '';
-  //$scope.showUploadOptions = false;
-  //$scope.showSpinner = false;
   $scope.showSheetForm = false;
   $scope.sheetnames = [];
   $scope.sheetname = '';
   $scope.firstRow = '';
 
 
-  $scope.useTranslation = function() {
-    switch(default_language) {
-      case "Browers":
-        //Default case already done by the config
-        break;
-      case "English":
-        $scope.changeLanguage('en');
-        break;
-      case "Français":
-        $scope.changeLanguage('fr');
-        break;
-    }
+  $scope.on = function() {
+    ReactDOM.render(
+      <Main nextStep={$scope.displayStep2}/>,
+      document.getElementById("myapp")
+    );
   }
 
-
-  $scope.changeLanguage = function (langKey) {
-    $translate.use(langKey).then(function(){}, function(){toastr.error('JSON translate file is invalid')})
-  };
-
-
-  $scope.previewDocID = function() {
-    $scope.previewID = createDocumentId($scope.esID, jsonData.data[0]);
-  }
-
-
-  $scope.step1Job = function() {
+  /*$scope.step1Job = function() {
 
     //All csv files are read as UTF-8 (need to fix later)
     if(fileInfo.ext != "csv")
@@ -123,59 +139,83 @@ app.controller('xlsxImport', function ($scope, $route, $interval, $http, $transl
       workbook = XLSX.read(fileInfo.data, {type : 'binary'});
     }
 
-    var range = XLSX.utils.decode_range(workbook.Sheets[$scope.sheetname]['!ref']);
-    if(range.e.r > maxDisplayableElement) range.e.r = maxDisplayableElement;
+    if(workbook.Sheets[$scope.sheetname]['!ref'] != undefined){
+      var range = XLSX.utils.decode_range(workbook.Sheets[$scope.sheetname]['!ref']);
+      if(range.e.r > maxDisplayableElement) range.e.r = maxDisplayableElement;
 
-    var exceltojson = new Object();
-    exceltojson.header = get_header_row(workbook.Sheets[$scope.sheetname]);
-    exceltojson.data = formatJSON(XLSX.utils.sheet_to_json(workbook.Sheets[$scope.sheetname], {range: range}));
-    $scope.firstRow = exceltojson.data[0];
+      var exceltojson = new Object();
+      exceltojson.header = get_header_row(workbook.Sheets[$scope.sheetname]);
+      exceltojson.data = formatJSON(XLSX.utils.sheet_to_json(workbook.Sheets[$scope.sheetname], {range: range}));
+      $scope.firstRow = exceltojson.data[0];
 
-    var columns = exceltojson.header.map((s) => ({
-      field: s,
-      name: s
-    }));
+      var columns = exceltojson.header.map((s) => ({
+        field: s,
+        name: s,
+        truncateText: true
+      }));
 
-    ReactDOM.render(
-      <Table items={exceltojson.data} columns={columns}/>,
-      document.getElementById("dataPreviewContainer")
-    );
+      ReactDOM.render(
+        <PreviewTable items={exceltojson.data} columns={columns}/>,
+        document.getElementById("dataPreviewContainer")
+      );
 
-    angular.element('#nextButton').removeAttr('disabled');
+      angular.element('#nextButton').attr('disabled', false);
+
+    } else {
+      ReactDOM.render(
+        <EuiText color="danger"><p>No data found</p></EuiText>,
+        document.getElementById("dataPreviewContainer")
+      );
+
+      angular.element('#nextButton').attr('disabled', true);
+    }
   }
 
 
-  $scope.displayStep2 = function() {
-    document.getElementById("progress-img").innerHTML = '<img src="../plugins/xlsx-import/ressources/progress-step2.png"/>'
+  $scope.displayStep2 = function(indexname, workbook, sheetname, firstrow) {
+    //document.getElementById("progress-img").innerHTML = '<img src="../plugins/xlsx-import/ressources/progress-step2.png"/>'
+
+    ReactDOM.render(
+      <EuiImage alt="steps" url="../plugins/xlsx-import/ressources/progress-step2.png" />,
+      document.getElementById("step")
+    );
 
     ReactDOM.render(
       <StepTwo
-        indexName={$scope.indexName}
-        header={get_header_row(workbook.Sheets[$scope.sheetname])}
-        items={getHeaderWithType(workbook.Sheets[$scope.sheetname])}
-        firstRow = {$scope.firstRow}
+        indexName={indexname}
+        header={get_header_row(workbook.Sheets[sheetname])}
+        items={getHeaderWithType(workbook.Sheets[sheetname])}
+        firstRow = {firstrow}
         nextStep={$scope.displayStep3}
-        workbook={workbook}/>,
-      document.getElementById("content")
+        workbook={workbook}
+        sheetname={sheetname}
+        bulksize={bulkSize}
+      />,
+      document.getElementById("main")
     );
   }
 
 
-  $scope.displayStep3 = function(indexName, nbDocument) {
-    document.getElementById("progress-img").innerHTML = '<img src="../plugins/xlsx-import/ressources/progress-step3.png"/>'
+  $scope.displayStep3 = function(indexName, sheetname , filename, nbDocument) {
+    //document.getElementById("progress-img").innerHTML = '<img src="../plugins/xlsx-import/ressources/progress-step3.png"/>'
+    ReactDOM.render(
+      <EuiImage alt="steps" url="../plugins/xlsx-import/ressources/progress-step3.png" />,
+      document.getElementById("step")
+    );
+
     ReactDOM.render(
       <StepThree
         indexName={indexName}
-        sheetName={$scope.sheetname}
-        fileName={fileInfo.name}
+        sheetName={sheetname}
+        fileName={filename}
         nbDocument={nbDocument} />,
-      document.getElementById("content")
+      document.getElementById("main")
     );
   }
-});
+});*/
 
 
-app.directive('importSheetJs', function($translate) {
+/*app.directive('importSheetJs', function() {
   return {
     scope: { opts: '=' },
     link: function ($scope, $elm, $attrs) {
@@ -185,7 +225,6 @@ app.directive('importSheetJs', function($translate) {
         fileInfo = new Object();
 
         if (!supportedFileType.includes(getExtension(changeEvent.target.files[0].name)[0])) {
-          alert($translate.instant("INVALID_EXTENSION_FILE_MESSAGE"));
           return
         }
 
@@ -216,7 +255,7 @@ app.directive('importSheetJs', function($translate) {
       });
     }
   };
-});
+});*/
 
 
 //Mise à jour du fichier en cas d'ouverture avec d'autres logiciel... (libreoffice)
@@ -325,59 +364,4 @@ function formatJSON(json){
     });
   });
   return json;
-}
-
-
-//Create the document ID by using the template in $scope.esID
-function createDocumentId(template, obj) {
-  var getFromBetween = {
-    results:[],
-    string:"",
-    getFromBetween:function (sub1,sub2) {
-        if(this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0) return false;
-        var SP = this.string.indexOf(sub1)+sub1.length;
-        var string1 = this.string.substr(0,SP);
-        var string2 = this.string.substr(SP);
-        var TP = string1.length + string2.indexOf(sub2);
-        return this.string.substring(SP,TP);
-    },
-    removeFromBetween:function (sub1,sub2) {
-        if(this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0) return false;
-        var removal = sub1+this.getFromBetween(sub1,sub2)+sub2;
-        this.string = this.string.replace(removal,"");
-    },
-    getAllResults:function (sub1,sub2) {
-        // first check to see if we do have both substrings
-        if(this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0) return;
-
-        // find one result
-        var result = this.getFromBetween(sub1,sub2);
-        // push it to the results array
-        this.results.push(result);
-        // remove the most recently found one from the string
-        this.removeFromBetween(sub1,sub2);
-
-        // if there's more substrings
-        if(this.string.indexOf(sub1) > -1 && this.string.indexOf(sub2) > -1) {
-            this.getAllResults(sub1,sub2);
-        }
-        else return;
-    },
-    get:function (string,sub1,sub2) {
-        this.results = [];
-        this.string = string;
-        this.getAllResults(sub1,sub2);
-        return this.results;
-    }
-  };
-  let keys = getFromBetween.get(template, "{", "}");
-
-  keys.forEach(function(key) {
-    if(obj[key] != undefined)
-      template = template.replace('{'+key+'}', obj[key]);
-    else
-      template = template.replace('{'+key+'}', key);
-  })
-
-  return template;
 }

@@ -11,13 +11,15 @@ This Kibana visualization plugin is like a Data Table, but with enhanced feature
   - Ability to reference total hits count returned by ES query (ex: `col0 / total * 100`)
   - Support for numeric pretty format using [Numeral.js](http://numeraljs.com/#format) (ex: `0,0.00`)
   - Support for column alignment (ex: `left`, `right`)
-  - Support for template rendering using [Handlebars](http://handlebarsjs.com/expressions.html) (ex: `<b>{{value}}</b>`)
-  - Template can reference other columns using :`{{col0}}`
+  - Support for template rendering using [Handlebars](http://handlebarsjs.com/expressions.html) (ex: `<strong>{{value}}</strong>`)
+  - Template can reference other columns using :`<span style="color: {{col0}}">{{value}}</span>`
 - Hide some table columns (ex: `0,1` hides columns 0 and 1)
-- Add a filter bar (ex: `cat` filter will display only rows that contain "cat"). Works also with numeric and date columns.
-- Hide export links (ex: when enabled, it will hide "Raw" and "Formatted" export links)
-- Kibana supported versions : 5.5, 5.6, 6.0, 6.1 and 6.2
-
+- Add a filter bar (ex: when user enters `cat` filter, it will display only rows that contain "cat").  
+Works also with numeric and date columns.
+- Support for a new bucket type : 'Split Cols'. It lets to create a pivot table.
+- Hide export links (when checked, it will hide "Raw" and "Formatted" export links)
+- Add a total label on total line first column
+- Kibana supported versions : 5.5, 5.6, 6.0, 6.1, 6.2 and 6.3
 
 ## Demo
 
@@ -32,9 +34,9 @@ Every release includes a Plugin version (X.Y.Z) and a Kibana version (A.B.C).
 - launch a command shell and go to $KIBANA_HOME/bin folder
 - use Kibana CLI to install : 
   - directly from Internet URL :
-`$KIBANA_HOME/bin/kibana-plugin install https://github.com/fbaligand/kibana-enhanced-table/releases/download/vX.Y.Z/kibana-enhanced-table-X.Y.Z_A.B.C.zip`
+`$KIBANA_HOME/bin/kibana-plugin install https://github.com/fbaligand/kibana-enhanced-table/releases/download/vX.Y.Z/enhanced-table-X.Y.Z_A.B.C.zip`
   - locally after manual download :
-`$KIBANA_HOME/bin/kibana-plugin install file:///path/to/kibana-enhanced-table-X.Y.Z_A.B.C.zip`
+`$KIBANA_HOME/bin/kibana-plugin install file:///path/to/enhanced-table-X.Y.Z_A.B.C.zip`
 
 
 ## Change Log

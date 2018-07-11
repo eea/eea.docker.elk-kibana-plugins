@@ -1,4 +1,4 @@
-function createBulk(json, indexName, kbnCustomId) {
+function createBulk(json, indexName, kbnCustomId, BULKSIZE) {
   var bulk_request = [];
   var bulk_package = [];
 
@@ -10,9 +10,11 @@ function createBulk(json, indexName, kbnCustomId) {
       bulk_package.push({index: { _index: indexName, _type: 'doc' } });
     bulk_package.push(json[i]);
 
-    if(bulk_package.length >= 1000) {   //TODO : Get this number from config
+    if(bulk_package.length >= BULKSIZE) {
       bulk_request.push(bulk_package);
       bulk_package = [];
+      if(json[i+1] === undefined)
+        return bulk_request;
     }
   }
   bulk_request.push(bulk_package);
@@ -20,27 +22,32 @@ function createBulk(json, indexName, kbnCustomId) {
   return bulk_request;
 }
 
+
 function createMapping(elements, advjsons, items) {
   var types = [];
   var mappingParameters = [];
 
+  let properties = {};
+
   for(var i=0; i < elements.length; i++){
+
     types.push(elements[i].value);
+    mappingParameters.push(advjsons[i].value);
+
+    properties[items[i]] = { "type": types[i] };
+
+    if (mappingParameters[i]) {
+      properties[items[i]] = Object.assign({}, properties[items[i]], JSON.parse(mappingParameters[i]));
+    }
+
   }
+  
+  return {"properties" : properties};
 
-  for(var j=0; j < advjsons.length; j++){
-    mappingParameters.push(advjsons[j].value);
-  }
-
-
-  var mapping_request = '{ "properties": {';
+  //console.log(mappingParameters)
+  /*var mapping_request = '{ "properties": {';
 
   for(var i = 0; i < elements.length; i++) {
-
-    /*if(types[i] === 'text')
-      mapping_request += '"'+ items[i] +'": { "type": "'+ types[i] +'", "fields": { "keyword": { "type": "keyword" } } }';
-    else
-      mapping_request += '"'+ items[i] +'": { "type": "'+ types[i] +'" }';*/
 
     if(mappingParameters[i] != undefined && mappingParameters[i] != "")
       mapping_request += '"'+ items[i] +'": { "type": "'+ types[i] +'", '+ mappingParameters[i] +' }';
@@ -52,9 +59,10 @@ function createMapping(elements, advjsons, items) {
       mapping_request += ','
     }
 
-    mapping_request += '} }';
+    mapping_request += '} }';*/
 
-    return mapping_request;
+
+
 }
 
 function createKbnCustomId(template, obj) {

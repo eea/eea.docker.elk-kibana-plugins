@@ -1,12 +1,12 @@
-import 'plugins/enhanced-table/enhanced-table-vis.less';
-import 'plugins/enhanced-table/enhanced-table-vis-controller';
-import 'plugins/enhanced-table/enhanced-table-vis-params';
+import './enhanced-table-vis.less';
+import './enhanced-table-vis-controller';
+import './enhanced-table-vis-params';
 import 'ui/agg_table';
 import 'ui/agg_table/agg_table_group';
 import { VisFactoryProvider } from 'ui/vis/vis_factory';
 import { CATEGORY } from 'ui/vis/vis_category';
-import { VisSchemasProvider } from 'ui/vis/editors/default/schemas';
-import tableVisTemplate from 'plugins/enhanced-table/enhanced-table-vis.html';
+import { Schemas } from 'ui/vis/editors/default/schemas';
+import tableVisTemplate from './enhanced-table-vis.html';
 import { VisTypesRegistryProvider } from 'ui/registry/vis_types';
 import image from './images/icon-table.svg';
 // we need to load the css ourselves
@@ -23,7 +23,6 @@ VisTypesRegistryProvider.register(EnhancedTableVisProvider);
 // define the TableVisType
 function EnhancedTableVisProvider(Private) {
   const VisFactory = Private(VisFactoryProvider);
-  const Schemas = Private(VisSchemasProvider);
 
   // define the EnhancedTableVisProvider which is used in the template
   // by angular's ng-controller directive
@@ -53,6 +52,7 @@ function EnhancedTableVisProvider(Private) {
         showFilterBar: false,
         filterCaseSensitive: false,
         filterBarHideable: false,
+        filterAsYouType: false,
         filterBarWidth: '25%'
       },
       template: tableVisTemplate
@@ -64,11 +64,17 @@ function EnhancedTableVisProvider(Private) {
           group: 'metrics',
           name: 'metric',
           title: 'Metric',
-          aggFilter: ['!geo_centroid','!geo_bounds'],
+          aggFilter: ['!geo_centroid', '!geo_bounds'],
           min: 1,
           defaults: [
             { type: 'count', schema: 'metric' }
           ]
+        },
+        {
+          group: 'buckets',
+          name: 'split',
+          title: 'Split Table',
+          aggFilter: ['!filter']
         },
         {
           group: 'buckets',
@@ -78,9 +84,11 @@ function EnhancedTableVisProvider(Private) {
         },
         {
           group: 'buckets',
-          name: 'split',
-          title: 'Split Table',
-          aggFilter: ['!filter']
+          name: 'splitcols',
+          title: 'Split Cols',
+          aggFilter: ['!filter'],
+          max: 1,
+          editor: '<div class="hintbox"><i class="fa fa-danger text-info"></i> This bucket must be the last one</div>'
         }
       ])
     },
