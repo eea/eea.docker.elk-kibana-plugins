@@ -1,11 +1,11 @@
-FROM eeacms/elk-kibana:6.2.2-eea
+FROM eeacms/elk-kibana:6.8.13-eea
 
 MAINTAINER michimau <mauro.michielon@eea.europa.eu>
 
 RUN npm install -g bower
 RUN echo '{ "allow_root": true }' > /root/.bowerrc
 
-ENV KIBANA_VERSION 6.2.2
+ENV KIBANA_VERSION 6.8.13
 
 ADD plugins/kibana-time-plugin /opt/kibana/plugins/kibana-time-plugin
 RUN cd /opt/kibana/plugins/kibana-time-plugin && sed "s#KIBANA_VERSION#$KIBANA_VERSION#g" -i ./package.json && bower install --force-latest && npm install
